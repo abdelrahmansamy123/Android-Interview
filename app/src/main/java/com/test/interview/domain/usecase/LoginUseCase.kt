@@ -2,7 +2,7 @@ package com.test.interview.domain.usecase
 
 import com.test.interview.domain.model.User
 import com.test.interview.domain.repository.AuthRepository
-import jakarta.inject.Inject
+import javax.inject.Inject
 
 class LoginUseCase @Inject constructor(
     private val repository: AuthRepository

@@ -4,7 +4,7 @@ import com.test.interview.core.network.ApiService
 import com.test.interview.data.model.LoginRequest
 import com.test.interview.data.model.SignupRequest
 import com.test.interview.domain.model.User
-import jakarta.inject.Inject
+import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val apiService: ApiService
