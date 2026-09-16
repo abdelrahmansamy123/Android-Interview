@@ -1,5 +1,6 @@
 package com.test.interview.presentation.auth.signup
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.test.interview.domain.usecase.SignupUseCase
@@ -24,6 +25,7 @@ class SignupViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         name = event.value,
+                        nameError = null,
                         errorMessage = null
                     )
                 }
@@ -33,6 +35,7 @@ class SignupViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         email = event.value,
+                        emailError = null,
                         errorMessage = null
                     )
                 }
@@ -42,6 +45,8 @@ class SignupViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         password = event.value,
+                        passwordError = null,
+                        confirmPasswordError = null,
                         errorMessage = null
                     )
                 }
@@ -51,6 +56,7 @@ class SignupViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         confirmPassword = event.value,
+                        confirmPasswordError = null,
                         errorMessage = null
                     )
                 }
@@ -80,42 +86,105 @@ class SignupViewModel @Inject constructor(
     }
 
     private fun signup() {
-        val state = _uiState.value
+        val currentState = _uiState.value
 
+        if (currentState.isLoading) return
+
+        val name = currentState.name.trim()
+        val email = currentState.email.trim()
+        val password = currentState.password
+        val confirmPassword = currentState.confirmPassword
+
+        var nameError: String? = null
+        var emailError: String? = null
+        var passwordError: String? = null
+        var confirmPasswordError: String? = null
+
+        // Name validation
         when {
-            state.name.isBlank() -> {
-                showError("Name is required")
-                return
+            name.isBlank() -> {
+                nameError = "Please enter your name"
             }
 
-            state.email.isBlank() -> {
-                showError("Email is required")
-                return
+            name.length < 2 -> {
+                nameError = "Name must be at least 2 characters"
+            }
+        }
+
+        // Email validation
+        when {
+            email.isBlank() -> {
+                emailError = "Please enter your email"
             }
 
-            state.password.length < 6 -> {
-                showError("Password must be at least 6 characters")
-                return
+            !Patterns.EMAIL_ADDRESS
+                .matcher(email)
+                .matches() -> {
+                emailError = "Please enter a valid email"
+            }
+        }
+
+        // Password validation
+        when {
+            password.isBlank() -> {
+                passwordError = "Please enter your password"
             }
 
-            state.password != state.confirmPassword -> {
-                showError("Passwords do not match")
-                return
+            password.length < 6 -> {
+                passwordError = "Password must be at least 6 characters"
             }
+        }
+
+        // Confirm password validation
+        when {
+            confirmPassword.isBlank() -> {
+                confirmPasswordError = "Please confirm your password"
+            }
+
+            password != confirmPassword -> {
+                confirmPasswordError = "Passwords do not match"
+            }
+        }
+
+        if (
+            nameError != null ||
+            emailError != null ||
+            passwordError != null ||
+            confirmPasswordError != null
+        ) {
+            _uiState.update {
+                it.copy(
+                    name = name,
+                    email = email,
+                    nameError = nameError,
+                    emailError = emailError,
+                    passwordError = passwordError,
+                    confirmPasswordError = confirmPasswordError,
+                    errorMessage = null
+                )
+            }
+            return
         }
 
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
+                    name = name,
+                    email = email,
                     isLoading = true,
+                    isSuccess = false,
+                    nameError = null,
+                    emailError = null,
+                    passwordError = null,
+                    confirmPasswordError = null,
                     errorMessage = null
                 )
             }
 
             val result = signupUseCase(
-                name = state.name,
-                email = state.email,
-                password = state.password
+                name = name,
+                email = email,
+                password = password
             )
 
             result
@@ -132,16 +201,10 @@ class SignupViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             errorMessage = exception.message
-                                ?: "Signup failed"
+                                ?: "Signup failed. Please try again."
                         )
                     }
                 }
-        }
-    }
-
-    private fun showError(message: String) {
-        _uiState.update {
-            it.copy(errorMessage = message)
         }
     }
 }
