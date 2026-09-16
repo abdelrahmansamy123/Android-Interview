@@ -1,22 +1,9 @@
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.test.interview.presentation.auth.login.LoginContent
 import com.test.interview.presentation.auth.login.LoginEvent
 import com.test.interview.presentation.auth.login.LoginViewModel
 
@@ -34,63 +21,34 @@ fun LoginScreen(
         }
     }
 
-    Column {
-        OutlinedTextField(
-            value = state.email,
-            onValueChange = {
-                viewModel.onEvent(LoginEvent.EmailChanged(it))
-            },
-            modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text("Email")
-            }
-        )
+    LoginContent(
+        uiState = state,
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = state.password,
-            onValueChange = {
-                viewModel.onEvent(LoginEvent.PasswordChanged(it))
-            },
-            modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text("Password")
-            },
-            visualTransformation = if (state.passwordVisible) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            }
-        )
-
-        state.errorMessage?.let {
-            Text(
-                text = it,
-                color = Color.Red
+        onEmailChange = { email ->
+            viewModel.onEvent(
+                LoginEvent.EmailChanged(email)
             )
-        }
+        },
 
-        Spacer(modifier = Modifier.height(20.dp))
+        onPasswordChange = { password ->
+            viewModel.onEvent(
+                LoginEvent.PasswordChanged(password)
+            )
+        },
 
-        Button(
-            onClick = {
-                viewModel.onEvent(LoginEvent.LoginClicked)
-            },
-            enabled = !state.isLoading,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (state.isLoading) {
-                CircularProgressIndicator()
-            } else {
-                Text("Login")
-            }
-        }
+        onPasswordVisibilityClick = {
+            viewModel.onEvent(
+                LoginEvent.PasswordVisibilityClicked
+            )
+        },
 
-        TextButton(
-            onClick = onNavigateToSignup
-        ) {
-            Text("Don't have an account? Sign up")
-        }
-    }
+        onLoginClick = {
+            viewModel.onEvent(
+                LoginEvent.LoginClicked
+            )
+        },
+
+        onSignupClick = onNavigateToSignup
+    )
+
 }

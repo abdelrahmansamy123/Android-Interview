@@ -1,5 +1,6 @@
 package com.test.interview.presentation.auth.login
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.test.interview.domain.usecase.LoginUseCase
@@ -24,7 +25,8 @@ class LoginViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         email = event.value,
-                        emailError = null
+                        emailError = null,
+                        errorMessage = null
                     )
                 }
             }
@@ -33,7 +35,8 @@ class LoginViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         password = event.value,
-                        passwordError = null
+                        passwordError = null,
+                        errorMessage = null
                     )
                 }
             }
@@ -53,18 +56,46 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun login() {
-        val state = _uiState.value
+        val currentState = _uiState.value
+        // Prevent multiple clicks during login.
+        if (currentState.isLoading) return
 
-        if (state.email.isBlank()) {
-            _uiState.update {
-                it.copy(emailError = "Email is required")
+        val email = currentState.email.trim()
+        val password = currentState.password
+
+        var emailError: String? = null
+        var passwordError: String? = null
+        // Email validation
+        when {
+            email.isBlank() -> {
+                emailError = "Please enter your email"
             }
-            return
-        }
 
-        if (state.password.isBlank()) {
+            !Patterns.EMAIL_ADDRESS
+                .matcher(email)
+                .matches() -> {
+                emailError = "Please enter a valid email"
+            }
+        }
+        // Password validation
+        when {
+            password.isBlank() -> {
+                passwordError = "Please enter your password"
+            }
+
+            password.length < 6 -> {
+                passwordError = "Password must be at least 6 characters"
+            }
+        }
+        // Display errors and stop the login process.
+        if (emailError != null || passwordError != null) {
             _uiState.update {
-                it.copy(passwordError = "Password is required")
+                it.copy(
+                    email = email,
+                    emailError = emailError,
+                    passwordError = passwordError,
+                    errorMessage = null
+                )
             }
             return
         }
@@ -72,14 +103,18 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
+                    email = email,
                     isLoading = true,
-                    errorMessage = null
+                    emailError = null,
+                    passwordError = null,
+                    errorMessage = null,
+                    isSuccess = false
                 )
             }
 
             val result = loginUseCase(
-                email = state.email,
-                password = state.password
+                email = email,
+                password = password
             )
 
             result
@@ -96,45 +131,10 @@ class LoginViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             errorMessage = exception.message
-                                ?: "Login failed"
+                                ?: "Email or password is incorrect"
                         )
                     }
                 }
         }
     }
 }
-
-//    fun loginValidation() {
-//        val currentState = _uiState.value
-//        var emailError: String? = null
-//        var passwordError: String? = null
-//
-//        if (currentState.email.isBlank()) {
-//            emailError = "Please enter your email"
-//        } else if (!android.util.Patterns.EMAIL_ADDRESS
-//                .matcher(currentState.email)
-//                .matches()
-//        ) {
-//            emailError = "Please enter a valid email"
-//        }
-//
-//        if (currentState.password.isBlank()) {
-//            passwordError = "Please enter your password"
-//        } else if (currentState.password.length < 6) {
-//            passwordError = "Password must be at least 6 characters"
-//        }
-//
-//        if (emailError != null || passwordError != null) {
-//            _uiState.value = currentState.copy(
-//                emailError = emailError,
-//                passwordError = passwordError
-//            )
-//            return
-//        }
-//
-//        //  Firebase أو API Login
-//        _uiState.value = currentState.copy(
-//            isLoading = true,
-//        )
-//    }
-//}

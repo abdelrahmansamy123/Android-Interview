@@ -46,7 +46,8 @@ fun LoginContent(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onPasswordVisibilityClick: () -> Unit,
-    onLoginClick: () -> Unit
+    onLoginClick: () -> Unit,
+    onSignupClick: () -> Unit
 ) {
     val background = Brush.verticalGradient(
         colors = listOf(
@@ -161,7 +162,15 @@ fun LoginContent(
                         modifier = Modifier.align(Alignment.Start)
                     )
                 }
+                uiState.errorMessage?.let { error ->
+                    Spacer(modifier = Modifier.height(12.dp))
 
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                }
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
@@ -223,9 +232,7 @@ fun LoginContent(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextButton(
-                    onClick = {
-                        // Navigate to Sign Up
-                    }
+                    onClick = onSignupClick
                 ) {
                     Text(
                         text = "Don't have an account? Sign Up",
